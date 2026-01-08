@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | GenZ Ride</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans flex items-center justify-center h-screen">
+
+    <div class="glass-card p-8 rounded-2xl w-full max-w-md shadow-2xl">
+        <h2 class="text-3xl font-bold text-center mb-6 text-purple-400">Welcome Back! 👋</h2>
+
+        <div th:if="${param.error}" class="bg-red-500/20 text-red-300 p-3 rounded-lg mb-4 text-center text-sm border border-red-500/50">
+            Email ya Password galat hai bhai!
+        </div>
+
+        <div th:if="${param.logout}" class="bg-green-500/20 text-green-300 p-3 rounded-lg mb-4 text-center text-sm border border-green-500/50">
+            Logout successfully!
+        </div>
+
+        <form action="/login" method="post" class="space-y-4">
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Email</label>
+                <input type="email" name="username" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-purple-500" required>
+            </div>
+
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Password</label>
+                <input type="password" name="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-purple-500" required>
+            </div>
+
+            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition mt-4">
+                Login
+            </button>
+        </form>
+
+        <p class="text-center text-slate-500 mt-4 text-sm">
+            New here? <a href="/signup" class="text-purple-400 hover:underline">Create Account</a>
+        </p>
+    </div>
+
+</body>
+</html>

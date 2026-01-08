@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Dashboard | GenZ Ride</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans p-6">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+                My Dashboard 📊
+            </h1>
+            <a href="/profile" class="text-slate-400 hover:text-white">← Back to Profile</a>
+        </div>
+
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 border-b border-slate-700 pb-2">✅ Rides I have Booked</h2>
+        
+        <div th:if="${myBookings.empty}" class="text-slate-500 mb-8 italic">You haven't booked any rides yet.</div>
+
+        <div class="grid gap-4 mb-10">
+            <div th:each="booking : ${myBookings}" class="bg-slate-800 p-5 rounded-2xl border-l-4 border-emerald-500 flex justify-between items-center shadow-lg">
+                <div>
+                    <div class="flex items-center gap-2 text-lg font-bold">
+                        <span th:text="${booking.ride.source}">From</span> ➝ 
+                        <span th:text="${booking.ride.destination}">To</span>
+                    </div>
+                    <div class="text-slate-400 text-sm">
+                        Date: <span th:text="${booking.ride.travelDate}"></span> | 
+                        Driver: <span th:text="${booking.ride.driver.name}" class="text-purple-400"></span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">
+                        Booking Status: <span class="text-green-400" th:text="${booking.status}">CONFIRMED</span>
+                    </div>
+                </div>
+                <div>
+                    <a th:href="@{/ride/track(rideId=${booking.ride.id})}" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm mr-2 transition">
+                        🗺️ Track
+                    </a>
+                    <a th:href="@{/chat(withUserId=${booking.ride.driver.id})}" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm transition">
+                        💬 Chat
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-cyan-400 mb-4 border-b border-slate-700 pb-2">🚗 Rides I Offered</h2>
+
+        <div th:if="${offeredRides.empty}" class="text-slate-500 italic">You haven't offered any rides yet.</div>
+
+        <div class="grid gap-4">
+            <div th:each="ride : ${offeredRides}" class="bg-slate-800 p-5 rounded-2xl border-l-4 border-cyan-500 flex justify-between items-center shadow-lg">
+                <div>
+                    <div class="flex items-center gap-2 text-lg font-bold">
+                        <span th:text="${ride.source}">From</span> ➝ 
+                        <span th:text="${ride.destination}">To</span>
+                    </div>
+                    <div class="text-slate-400 text-sm">
+                        <span th:text="${ride.travelDate}"></span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">
+                        Price: ₹<span th:text="${ride.price}"></span> | Seats Left: <span th:text="${ride.seatsAvailable}"></span>
+                    </div>
+                </div>
+                <div>
+                    <button class="bg-slate-700 text-slate-400 cursor-not-allowed px-4 py-2 rounded-lg text-sm">
+                        Passengers (Coming Soon)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

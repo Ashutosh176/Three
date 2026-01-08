@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Publish Ride | GenZ Ride</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans flex items-center justify-center min-h-screen p-4">
+
+    <div class="glass-card p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
+        
+        <div id="loadingOverlay" class="hidden absolute inset-0 bg-slate-900/80 rounded-2xl flex flex-col items-center justify-center z-50">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
+            <p class="text-emerald-400 font-bold animate-pulse">Finding Route & Coordinates...</p>
+        </div>
+
+        <h2 class="text-3xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
+            Offer a Ride 🗺️
+        </h2>
+
+        <form id="rideForm" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">From (City)</label>
+                    <input type="text" id="source" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500 transition" placeholder="Delhi" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">To (City)</label>
+                    <input type="text" id="destination" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500 transition" placeholder="Mumbai" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Date</label>
+                    <input type="date" id="date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Time</label>
+                    <input type="time" id="time" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500 transition" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Price (₹)</label>
+                    <input type="number" id="price" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500 transition" placeholder="500" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Seats</label>
+                    <input type="number" id="seats" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500 transition" placeholder="3" required>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 mt-6">
+                Publish Ride 🚀
+            </button>
+        </form>
+        
+        <div class="text-center mt-4">
+            <a href="/" class="text-slate-500 text-sm hover:text-white">Cancel</a>
+        </div>
+    </div>
+
+    <script>
+        // OpenStreetMap Nominatim API se coordinates nikalne ka function
+        async function getCoordinates(city) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                return {
+                    lat: parseFloat(data[0].lat),
+                    lon: parseFloat(data[0].lon)
+                };
+            }
+            throw new Error(`Location not found: ${city}`);
+        }
+
+        // ... getCoordinates function waisa hi rahega ...
+
+            const formData = {
+                source: sourceCity,
+                destination: destCity,
+                travelDate: document.getElementById('date').value,
+                
+                // --- YE LINE ADD KARO ---
+                startTime: document.getElementById('time').value,
+                // -----------------------
+                
+                price: document.getElementById('price').value,
+                seatsAvailable: document.getElementById('seats').value,
+                sourceLat: sourceCoords.lat,
+                sourceLng: sourceCoords.lon,
+                destLat: destCoords.lat,
+                destLng: destCoords.lon
+            };
+// ... baaki same ...
+
+        document.getElementById('rideForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Loading dikhao
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+
+            const sourceCity = document.getElementById('source').value;
+            const destCity = document.getElementById('destination').value;
+
+            try {
+                // 1. Dono shehron ke coordinates nikalo (Magic!)
+                const sourceCoords = await getCoordinates(sourceCity);
+                const destCoords = await getCoordinates(destCity);
+
+                // 2. Data tayyar karo
+                const formData = {
+                    source: sourceCity,
+                    destination: destCity,
+                    travelDate: document.getElementById('date').value,
+                    price: document.getElementById('price').value,
+                    seatsAvailable: document.getElementById('seats').value,
+                    // Hidden coordinates backend ko bhejo
+                    sourceLat: sourceCoords.lat,
+                    sourceLng: sourceCoords.lon,
+                    destLat: destCoords.lat,
+                    destLng: destCoords.lon
+                };
+
+                // 3. Backend ko bhejo
+                const response = await fetch('/api/rides/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert("Ride Live with Map Route! 🗺️🚗");
+                    window.location.href = "/";
+                } else {
+                    alert("Error publishing ride.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("Error: Location nahi mili. Please sahi spelling check karein (e.g. New Delhi).");
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        });
+    </script>
+
+</body>
+</html>

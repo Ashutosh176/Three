@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Tracking | GenZ Ride</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+    <style>
+        #map { height: 500px; width: 100%; border-radius: 1rem; }
+        /* Car Icon Animation */
+        .moving-car {
+            transition: all 1s linear; /* Smooth movement */
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans p-6">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
+                    Live Tracking 🛰️
+                </h1>
+                <p class="text-slate-400">
+                    <span th:text="${ride.source}">Source</span> ➝ <span th:text="${ride.destination}">Dest</span>
+                </p>
+            </div>
+            <a href="/my-rides" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl transition">Back</a>
+        </div>
+
+        <div id="map" class="shadow-2xl border-4 border-slate-800 relative">
+            <button onclick="startSimulation()" class="absolute top-4 right-4 z-[1000] bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm">
+                ▶ Start Ride Simulation
+            </button>
+        </div>
+
+        <div class="mt-6 bg-slate-800 p-6 rounded-2xl flex justify-between items-center">
+            <div>
+                <p class="text-sm text-slate-500 uppercase">Driver</p>
+                <p class="text-xl font-bold text-purple-400" th:text="${ride.driver.name}">Driver Name</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-slate-500 uppercase">Status</p>
+                <p class="text-xl font-bold text-emerald-400 animate-pulse">On the Way...</p>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="sLat" th:value="${ride.sourceLat}">
+    <input type="hidden" id="sLng" th:value="${ride.sourceLng}">
+    <input type="hidden" id="dLat" th:value="${ride.destLat}">
+    <input type="hidden" id="dLng" th:value="${ride.destLng}">
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        const sLat = parseFloat(document.getElementById('sLat').value);
+        const sLng = parseFloat(document.getElementById('sLng').value);
+        const dLat = parseFloat(document.getElementById('dLat').value);
+        const dLng = parseFloat(document.getElementById('dLng').value);
+
+        if (!sLat || !sLng) {
+            alert("Coordinates missing for this ride!");
+        } else {
+            // 1. Map Setup (Satellite)
+            var map = L.map('map').setView([sLat, sLng], 10);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri'
+            }).addTo(map);
+
+            // Labels Layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Car Icon
+            var carIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/3097/3097180.png', // Car Emoji/Icon
+                iconSize: [40, 40],
+                iconAnchor: [20, 20] // Center
+            });
+
+            var carMarker = L.marker([sLat, sLng], {icon: carIcon}).addTo(map);
+            var routeCoordinates = [];
+
+            // 2. Routing Machine
+            var control = L.Routing.control({
+                waypoints: [
+                    L.latLng(sLat, sLng),
+                    L.latLng(dLat, dLng)
+                ],
+                routeWhileDragging: false,
+                show: false, // Turn-by-turn text hide kar diya
+                lineOptions: {
+                    styles: [{color: '#10b981', opacity: 0.8, weight: 6}]
+                }
+            }).addTo(map);
+
+            // 3. Route Milne par coordinates save karo
+            control.on('routesfound', function(e) {
+                var routes = e.routes;
+                var summary = routes[0].summary;
+                
+                // Raste ke saare points nikalo
+                routeCoordinates = routes[0].coordinates;
+            });
+
+            // 4. Simulation Logic (Car Moving)
+            function startSimulation() {
+                if(routeCoordinates.length === 0) {
+                    alert("Route loading... wait karo thoda!");
+                    return;
+                }
+
+                let index = 0;
+                // Speed control (Interval kam = Tez speed)
+                const interval = setInterval(() => {
+                    if (index >= routeCoordinates.length) {
+                        clearInterval(interval);
+                        alert("Ride Completed! ✅");
+                        return;
+                    }
+                    
+                    // Marker ko naye coordinate par move karo
+                    var coord = routeCoordinates[index];
+                    carMarker.setLatLng([coord.lat, coord.lng]);
+                    
+                    // Map bhi car ke sath chale
+                    map.panTo([coord.lat, coord.lng]);
+
+                    index += 2; // Jump points to make it faster
+                }, 100); // Har 100ms me update
+            }
+        }
+    </script>
+</body>
+</html>
