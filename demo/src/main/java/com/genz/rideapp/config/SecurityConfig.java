@@ -14,26 +14,48 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
-            .csrf(csrf -> csrf.disable()) // Development ke liye band kar rahe hain
+            // ❌ Disable CSRF only for development
+            .csrf(csrf -> csrf.disable())
+
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/signup", "/login", "/css/**", "/js/**", "/api/auth/**").permitAll() // Ye sab khula rahega
-                .anyRequest().authenticated() // Baaki sabke liye Login jaruri hai
+                // ✅ PUBLIC PAGES
+                .requestMatchers(
+                    "/", 
+                    "/signup", 
+                    "/login",
+
+                    // ✅ STATIC RESOURCES (VERY IMPORTANT)
+                    "/assets/**",
+                    "/images/**",
+                    "/css/**",
+                    "/js/**",
+                    "/webjars/**",
+
+                    // ✅ API AUTH
+                    "/api/auth/**"
+                ).permitAll()
+
+                // 🔒 Everything else requires login
+                .anyRequest().authenticated()
             )
+
             .formLogin(form -> form
-                .loginPage("/login") // Humara custom login page
-                .defaultSuccessUrl("/", true) // Login ke baad Home par bhejo
+                .loginPage("/login")
+                .defaultSuccessUrl("/", true)
                 .permitAll()
             )
+
             .logout(logout -> logout
-                .logoutSuccessUrl("/") // Logout ke baad wapas Home
+                .logoutSuccessUrl("/")
                 .permitAll()
             );
 
         return http.build();
     }
 
-    // Password ko Encrypt karne ke liye (Security Best Practice)
+    // 🔐 Password Encoder (Best Practice)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
